@@ -1,3 +1,6 @@
+// CS 587
+// Name: Sunil Shenoy
+
 package bufmgr;
 
 import global.*;

@@ -1,3 +1,6 @@
+// CS 587
+// Name: Sunil Shenoy
+
 package bufmgr;
 
 import java.util.*;
@@ -86,13 +89,9 @@ public class BufMgr implements GlobalConst {
 	public void pinPage(PageId pageno, Page mempage, int contents) {
 
 		Integer frameno;
-
-		// printframes();
-		// System.out.println("trying to pin " + pageno.pid);
-
+		// check if page is in buffer
 		if ((frameno = frame_Map.get(pageno.pid)) != null) {
-			// page is in buffer
-			// so increment its pin count
+			// If so then increment its pin count
 			frametab[frameno].inc_pinCount();
 		}
 
@@ -104,7 +103,6 @@ public class BufMgr implements GlobalConst {
 			for (Integer f = 0; f < numframes; f++) {
 				if (!frametab[f].valid_Page) {
 					frameno = f;
-					// System.out.println("Victim: " + frameno);
 					break;
 				}
 			}
@@ -115,13 +113,8 @@ public class BufMgr implements GlobalConst {
 					throw new IllegalStateException(
 							"all pages are pinned (i.e. pool is full)");
 
-			// if (frametab[frameno].valid_Page)
-			// System.out.println("Victim: " + frameno + "\t"
-			// + frametab[frameno].page_Number.pid);
-
-			// flush the victim page from the buffer and update the map
+			// flush the victim page from the buffer and remove it from the map
 			if (frametab[frameno].valid_Page) {
-				// printmap();
 				flushPage(frametab[frameno].page_Number);
 				frame_Map.remove(frametab[frameno].page_Number.pid);
 			}
@@ -147,8 +140,7 @@ public class BufMgr implements GlobalConst {
 
 		// point mempage to this frame's data
 		mempage.setData(frametab[frameno].getData());
-//		printframes();
-//		System.out.println();
+
 	}
 
 	/**
@@ -164,7 +156,6 @@ public class BufMgr implements GlobalConst {
 	public void unpinPage(PageId pageno, boolean dirty) {
 
 		Integer frameno;
-		// System.out.println("trying to unpin " + pageno.pid);
 		if ((frameno = frame_Map.get(pageno.pid)) == null
 				|| frametab[frameno].not_pinned()) {
 			throw new IllegalArgumentException(
@@ -179,8 +170,7 @@ public class BufMgr implements GlobalConst {
 				frametab[frameno].set_referenced(true);
 			frametab[frameno].set_dirty(dirty);
 		}
-		// printframes();
-		// System.out.println();
+
 	}
 
 	/**
@@ -202,10 +192,8 @@ public class BufMgr implements GlobalConst {
 	public PageId newPage(Page firstpg, int run_size) {
 
 		PageId firstpgid;
-		// System.out.println("starting newPage");
 		// first allocate the pages contiguously on disk
 		firstpgid = Minibase.DiskManager.allocate_page(run_size);
-		// System.out.println("First Pg Id: " + firstpgid.pid);
 		if (frame_Map.get(firstpgid.pid) != null
 				&& !frametab[frame_Map.get(firstpgid.pid)].not_pinned()) {
 			throw new IllegalArgumentException("firstpg is already pinned");
@@ -292,7 +280,7 @@ public class BufMgr implements GlobalConst {
 			if (!frametab[f].valid_Page || frametab[f].not_pinned())
 				numUnPinned++;
 		}
-//		System.out.println("Unpinned: " + numUnPinned);
+
 		return numUnPinned;
 
 	}
@@ -305,16 +293,14 @@ public class BufMgr implements GlobalConst {
 		for (int loops = 0; loops < 2; loops++) {
 			do {
 				// pick first unpinned page encountered whose referenced bit =
-				// false as
-				// victim
+				// false as the victim
 				if (frametab[current].not_pinned()) {
 					if (!frametab[current].referenced) {
 						return current;
 					} else
 						// clear unpinned page's referenced bit if set so that
 						// it is a candidate for victim next time unless it gets
-						// pinned
-						// meanwhile
+						// pinned meanwhile
 						frametab[current].set_referenced(false);
 				}
 				current = (current + 1) % numframes;
@@ -323,6 +309,7 @@ public class BufMgr implements GlobalConst {
 		return null;
 	}
 
+	// for debug purposes
 	public void printframes() {
 		System.out.println("Printing buffer contents:");
 		for (int f = 0; f < numframes; f++) {
